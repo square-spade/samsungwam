@@ -63,6 +63,7 @@ SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    | MediaPlayerEntityFeature.GROUPING
 )
 FEATURES_MAPPING = {
     Feature.PLAY: MediaPlayerEntityFeature.PLAY,
@@ -495,3 +496,25 @@ class SamsungWamPlayer(MediaPlayerEntity):
             media_content_id,
             media_content_type,
         )
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        speakers = []
+        for entity_id in group_members:
+            if speaker := self.hass.data[DOMAIN][ID_MAPPINGS].get(entity_id):
+                speakers.append(speaker)
+            else:
+                LOGGER.error(
+                    "Entity with id: %s is not a known Samsung WAM Media Player",
+                    entity_id,
+                )
+
+        if speakers:
+            await self.speaker.group_with(speakers, f"{self.name} - Group")
+        else:
+            raise HomeAssistantError("No valid Samsung WAM media player entity_id")
+
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        # TODO: How does this work if sent to master vs slave?
+        await self.speaker.ungroup()
