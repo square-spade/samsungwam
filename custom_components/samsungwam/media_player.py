@@ -162,6 +162,8 @@ class SamsungWamPlayer(MediaPlayerEntity):
             return STATE_PLAYING
         elif self.speaker.attribute.state == "pause":
             return STATE_PAUSED
+        elif self.speaker.attribute.source == "bluetooth" or self.speaker.attribute.source == "HDMI":
+            return STATE_ON
         else:
             return STATE_IDLE
 
